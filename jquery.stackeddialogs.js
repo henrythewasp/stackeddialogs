@@ -59,18 +59,22 @@
 		}
 
 		if (numToDelete > 0) {
-			$.each(stack, function(idx, $element) {
-				try { $element.dialog('close'); } catch(err) {} // Catch any exceptions to prevent causing a break out of loop.
-				return (idx < numToDelete-1);
+			$.each(stack, function(idx) {
+				return (removeDialog(idx) < numToDelete-1);
 			});
-		} else {
-			refreshPositions();
 		}
+
+		refreshPositions();
 	}
 
 	function removeDialog(i) {
-		var dels = stack.splice(i, 1);
-		if (dels.length) { dels[0].dialog('destroy'); }
+		var dels = stack.splice(i, 1), id;
+		if (dels.length) {
+			id = dels[0].attr('id');
+			dels[0].dialog('destroy');
+			$("#"+id).remove();  // Remove the div that we created (after dialog is destroyed first)
+		}
+		return i;
 	}
 
 	// Exported functions ----------------------------------------------------------------
@@ -86,6 +90,7 @@
 			resizable: false,
 			open: function(event) {
 				if (config.autoCloseTimeout > 0) {
+					clearTimeout(autoCloseTimer);
 					autoCloseTimer = setTimeout(function() {
 						try { $('#'+id).dialog('close'); } catch(err) {}
 					}, config.autoCloseTimeout);
@@ -102,7 +107,7 @@
 			position: getPosition(index) 
 		});
 
-		// Create new dialog and push it onto the stack
+		// Create new dialog and push it onto the stack after making space for it
 		$('body').append('<div id="' + id + '" data-index="' + index + '">' + msg + '</div>');
 		stack.push($("#"+id).dialog(config));
 
