@@ -22,13 +22,13 @@
 		height: 'auto',
 		width: 250,
 		minHeight: 0,
-		show: { effect:'fade', direction:'right', duration:500 },
-		hide: { effect:'fade', direction:'right', duration:500 }
+		hide: { effect: 'slide', easing: 'swing' },
+		show: { effect: 'slide', easing: 'swing' }
 	};
 
 	function getPosition(i) {
 		return (i === 0) ? { my: 'bottom', at: 'left bottom', of: window, offset: '0 -10' }
-						 : { my: 'bottom', at: 'top', of: stack[i-1], offset: '0 -25' };
+				 : { my: 'bottom', at: 'top', of: stack[i-1], offset: '0 -25' };
 	}
 
 	function refreshPositions() {
@@ -76,6 +76,10 @@
 		}
 		return i;
 	}
+	
+	function safeClose(sel) {
+		try { $(sel).dialog('close'); } catch(err) {}
+	}
 
 	// Exported functions ----------------------------------------------------------------
 	$.fn.addStackedDialog = function(msg, args) {
@@ -92,9 +96,15 @@
 				if (config.autoCloseTimeout > 0) {
 					clearTimeout(autoCloseTimer);
 					autoCloseTimer = setTimeout(function() {
-						try { $('#'+id).dialog('close'); } catch(err) {}
+						safeClose('#'+id);
 					}, config.autoCloseTimeout);
 				}
+				// Let user click anywhere to close the dialog
+				$("body")
+					.off(".stackeddialog")
+					.on("click.stackeddialog", "div."+config.dialogClass+" div.ui-dialog-content", function(event) {
+						safeClose(event.target);
+					});
 			},
 			create: function(event) {
 				$(event.target).dialog('widget').css({ 'position': 'fixed' });
